@@ -1,0 +1,386 @@
+<!doctype html>
+<html lang="ja"><head><meta charset="utf-8">
+<title>AIにツールを作らせるときの指示書</title>
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<style>
+@page { size: A4; margin: 17mm 15mm 15mm; }
+:root{
+  --ink:#221F1A; --dim:#6B6459; --line:#D9D3C8; --accent:#C92C3C;
+  --soft:#F7DEE1; --paper:#F6F3EC; --ok:#1F7A5C; --oksoft:#E3F0EA; --warn:#96631A; --warnsoft:#F6EBD6;
+}
+*{ box-sizing:border-box; }
+body{
+  margin:0; color:var(--ink); background:#fff;
+  font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic",sans-serif;
+  font-size:10.2pt; line-height:1.85; -webkit-print-color-adjust:exact; print-color-adjust:exact;
+}
+p{ margin:0 0 .7em; }
+strong{ font-weight:700; }
+.mono{ font-family:"SF Mono",Menlo,monospace; }
+
+/* 表紙 */
+.cover{ height:252mm; display:flex; flex-direction:column; justify-content:center; break-after:page; }
+.cover .kick{ font-size:8.5pt; letter-spacing:.26em; color:var(--accent); margin-bottom:14mm; }
+.cover h1{ font-size:27pt; line-height:1.4; margin:0 0 7mm; letter-spacing:-.01em; }
+.cover .sub{ font-size:11.5pt; color:var(--dim); line-height:1.9; margin:0 0 16mm; }
+.cover .meta{ border-top:1.6pt solid var(--ink); padding-top:5mm; font-size:9pt; color:var(--dim); }
+.cover .meta b{ color:var(--ink); }
+
+/* 見出し */
+h2{
+  font-size:14.5pt; margin:11mm 0 4mm; padding-bottom:2.5mm;
+  border-bottom:1.6pt solid var(--ink); break-after:avoid; break-inside:avoid;
+}
+h2 .n{ color:var(--accent); font-size:9pt; letter-spacing:.16em; display:block; margin-bottom:1.5mm; font-weight:400; }
+h3{ font-size:11.3pt; margin:6mm 0 2mm; break-after:avoid; }
+h3::before{ content:"▍"; color:var(--accent); margin-right:1.5mm; }
+
+/* 箱 */
+.box{ border:.8pt solid var(--line); border-radius:3mm; padding:4mm 5mm; margin:0 0 4mm; break-inside:avoid; }
+.box.tip{ background:var(--oksoft); border-color:transparent; border-left:2.5pt solid var(--ok); }
+.box.warn{ background:var(--warnsoft); border-color:transparent; border-left:2.5pt solid var(--warn); }
+.box.hot{ background:var(--soft); border-color:transparent; border-left:2.5pt solid var(--accent); }
+.box .t{ font-weight:700; font-size:9.6pt; margin-bottom:1.5mm; }
+.box p:last-child{ margin-bottom:0; }
+
+/* 実例 */
+.ex{ background:var(--paper); border-radius:3mm; padding:3.5mm 5mm; margin:0 0 4mm; font-size:9.3pt;
+     color:var(--dim); break-inside:avoid; }
+.ex b{ color:var(--accent); font-size:8.3pt; letter-spacing:.1em; display:block; margin-bottom:1mm; }
+
+/* セリフ */
+.say{ border-left:2.5pt solid var(--accent); background:#fff; padding:2.5mm 0 2.5mm 5mm; margin:0 0 3mm;
+      font-size:10.5pt; break-inside:avoid; }
+.say::before{ content:"「"; } .say::after{ content:"」"; }
+
+/* 表 */
+table{ width:100%; border-collapse:collapse; font-size:9.4pt; margin:0 0 4mm; break-inside:auto; }
+tr{ break-inside:avoid; }
+thead{ display:table-header-group; }
+th,td{ text-align:left; padding:2.3mm 3mm; border-bottom:.6pt solid var(--line); vertical-align:top; }
+th{ font-size:8.4pt; letter-spacing:.05em; color:var(--dim); border-bottom:1pt solid var(--ink); white-space:nowrap; }
+td.k{ white-space:nowrap; font-weight:700; width:30%; }
+
+/* チェック */
+ul.ck{ list-style:none; padding:0; margin:0 0 4mm; }
+ul.ck li{ padding:1.6mm 0 1.6mm 8mm; position:relative; border-bottom:.5pt dotted var(--line); font-size:9.8pt; }
+ul.ck li::before{ content:""; position:absolute; left:0; top:2.6mm; width:4mm; height:4mm;
+  border:1pt solid var(--ink); border-radius:.8mm; }
+ul.ck li b{ display:block; }
+ul.ck li span{ color:var(--dim); font-size:9pt; }
+
+/* 番号つき流れ */
+ol.flow{ counter-reset:f; list-style:none; padding:0; margin:0 0 4mm; }
+ol.flow li{ counter-increment:f; position:relative; padding:0 0 4mm 11mm; break-inside:avoid; }
+ol.flow li::before{
+  content:counter(f); position:absolute; left:0; top:.3mm; width:6.5mm; height:6.5mm; border-radius:1.6mm;
+  background:var(--ink); color:#fff; display:flex; align-items:center; justify-content:center;
+  font-size:9pt; font-weight:700;
+}
+ol.flow li b{ display:block; font-size:10.6pt; }
+ol.flow li span{ color:var(--dim); font-size:9.4pt; }
+
+/* コピペ用 */
+.tpl{ border:1.2pt dashed var(--accent); border-radius:3mm; padding:5mm 6mm; background:#fff; break-inside:avoid; }
+.tpl .lbl{ font-size:8.3pt; letter-spacing:.14em; color:var(--accent); margin-bottom:3mm; }
+.tpl p{ margin:0 0 2.6mm; }
+.tpl .fill{ background:var(--soft); padding:0 1mm; border-radius:1mm; }
+
+
+/* ===== 画面で読むとき（印刷には影響しない） ===== */
+@media screen {
+  body{ font-size:16px; line-height:1.95; padding:0 18px 80px; max-width:760px; margin:0 auto;
+        background:var(--paper); }
+  .cover{ height:auto; padding:40px 0 28px; break-after:auto; border-bottom:1.6pt solid var(--ink);
+          margin-bottom:8px; }
+  .cover h1{ font-size:30px; }
+  .cover .sub{ font-size:16px; }
+  .cover .meta{ font-size:13px; }
+  .dl{ display:block; margin:22px 0 0; padding:14px 18px; border-radius:12px; background:var(--accent);
+       color:#fff; text-decoration:none; font-weight:700; text-align:center; font-size:15px; }
+  h2{ font-size:21px; margin:38px 0 14px; padding-bottom:9px; }
+  h2 .n{ font-size:11px; margin-bottom:5px; }
+  h3{ font-size:17px; margin:26px 0 8px; }
+  p{ margin:0 0 1em; }
+  .lead{ font-size:16px; margin:0 0 18px; }
+  .box, .ex, .tpl{ border-radius:12px; padding:16px 18px; margin:0 0 16px; background:#fff; }
+  .box.tip{ background:var(--oksoft); } .box.warn{ background:var(--warnsoft); }
+  .box.hot{ background:var(--soft); } .ex{ background:#EFEBE1; }
+  .box .t{ font-size:15px; margin-bottom:6px; }
+  .ex{ font-size:14.5px; } .ex b{ font-size:12px; }
+  .say{ font-size:17px; padding:8px 0 8px 16px; margin:0 0 14px; background:transparent; }
+  table{ font-size:14.5px; margin:0 0 18px; display:block; overflow-x:auto; }
+  th,td{ padding:10px 12px; }
+  td.k{ width:auto; }
+  ul.ck li{ padding:9px 0 9px 30px; font-size:15.5px; }
+  ul.ck li::before{ top:13px; width:16px; height:16px; }
+  ul.ck li span{ font-size:14px; }
+  ol.flow li{ padding:0 0 18px 40px; }
+  ol.flow li::before{ width:26px; height:26px; font-size:14px; }
+  ol.flow li b{ font-size:16.5px; } ol.flow li span{ font-size:14.5px; }
+  .tpl{ border:2px dashed var(--accent); }
+  .tpl .lbl{ font-size:11px; margin-bottom:12px; }
+  .foot{ font-size:13px; margin-top:40px; }
+}
+@media print { .dl{ display:none; } }
+
+.lead{ font-size:10.6pt; color:var(--dim); margin:0 0 5mm; }
+.foot{ margin-top:10mm; padding-top:3mm; border-top:.8pt solid var(--line); font-size:8.6pt; color:var(--dim); }
+</style></head><body>
+
+<section class="cover">
+  <div class="kick">AI に ツール を つくらせる ための</div>
+  <h1>指示書のつくり方<br>＆ 準備するもの</h1>
+  <div class="sub">「マニュアルをアプリにしたい」みたいな相談を、<br>
+  手戻りなく、短い時間で形にするための手引き。</div>
+  <div class="meta">
+    <b>対象</b>　AIに作業を頼む人（専門知識は不要）<br>
+    <b>もとになった実例</b>　TikTok Lite 招待マニュアルのツール化／スマホアプリ化（2026年10月）<br>
+    <b>作成日</b>　2026年10月14日
+  </div>
+  <a class="dl" href="ai-tool-guide.pdf">PDFで保存・印刷する</a>
+</section>
+
+<h2><span class="n">CHAPTER 01</span>いちばん大事なこと</h2>
+<p class="lead">うまくいくかどうかは、<strong>作る前に何を渡したか</strong>でほぼ決まります。きれいな指示文を考えるより、手元の材料をそのまま出すほうが先です。</p>
+
+<div class="box hot">
+  <div class="t">覚えるのはこの3つだけ</div>
+  <p><strong>① 散らかったまま渡す</strong>　整理してから渡そうとすると、いつまでも始まりません。<br>
+  <strong>② ゴールだけ言う</strong>　作り方は任せる。どんな技術を使うかは決めなくていい。<br>
+  <strong>③ 分からないことは「分からない」と言う</strong>　これが抜けると、それらしい嘘が混ざります。</p>
+</div>
+
+<div class="ex"><b>実例</b>
+TikTok Liteのマニュアルは、Markdown 3本・教材HTML 8本・PDF 2本・セミナー台本 3本に同じ話がバラバラに書かれた状態でした。整理せずそのまま渡した結果、AI側が「カテゴリーの選択数が資料によって3〜4つと2つで食い違っている」「自演招待が、ある資料では推奨・別の資料では禁止候補になっている」という矛盾を見つけ出しました。先に自分で整理していたら、この矛盾は気づかないまま消えていました。</div>
+
+<h2><span class="n">CHAPTER 02</span>作りはじめる前に準備するもの</h2>
+<p>全部そろえる必要はありません。<strong>無いものは「無い」と言えば、後から足せる形で作ってもらえます。</strong></p>
+
+<ul class="ck">
+  <li><b>今ある資料ぜんぶ</b><span>Word・PDF・メモ・LINEの文面・手書き写真でも可。バラバラ・重複・古いものが混ざっていて構いません</span></li>
+  <li><b>写真・スクリーンショット</b><span>後からでOK。「写真は後で渡す。どれが要るか教えて」と言えば、必要な枚数と内容を先に出してもらえます</span></li>
+  <li><b>確定していること／していないことの区別</b><span>「ここは実機で確かめた」「ここは聞いた話」の線引き。これが一番大事な材料です</span></li>
+  <li><b>誰が見るか</b><span>自分だけ／社内メンバー／生徒さん。これで作りが大きく変わります</span></li>
+  <li><b>どこで使うか</b><span>パソコンで読む／作業中にスマホで見る／印刷して配る</span></li>
+  <li><b>見せたくない相手がいるか</b><span>いるなら合言葉やパスワードが要る、と最初に言っておく</span></li>
+  <li><b>アカウント</b><span>公開するならGitHubなど。作成とログインは本人しかできません（→ CHAPTER 07）</span></li>
+</ul>
+
+<div class="box tip">
+  <div class="t">資料が古くても捨てない</div>
+  <p>「これは古いかも」という資料こそ渡してください。新旧を突き合わせて、<strong>どこが変わったのか</strong>を見つける材料になります。捨てるかどうかは、突き合わせた後で決めれば間に合います。</p>
+</div>
+
+<h2><span class="n">CHAPTER 03</span>最初に言う3つのこと</h2>
+<p>長い説明はいりません。この3つが埋まっていれば、設計まで任せられます。</p>
+
+<table>
+  <tr><th>言うこと</th><th>例（TikTokマニュアルの場合）</th></tr>
+  <tr><td class="k">① 何に困っているか</td><td>キャンペーンの金額が変わるたびに、教材を全部手で直すのが大変</td></tr>
+  <tr><td class="k">② 誰が使うか</td><td>自分と、招待メンバーへの配布</td></tr>
+  <tr><td class="k">③ どこで使うか</td><td>作業中にスマホで見たい</td></tr>
+</table>
+
+<div class="ex"><b>この3つから決まったこと</b>
+①から「事実を1か所に集めて、そこから全教材を自動で作り直す形」、②から「他人が読んで分かる書き方と、配れる形式」、③から「スマホアプリ化」。<strong>作り方を一言も指定していないのに、設計はここで決まっています。</strong></div>
+
+<h2><span class="n">CHAPTER 04</span>指示の出し方・6つのコツ</h2>
+
+<h3>1. 手段ではなく、ゴールを言う</h3>
+<p>「HTMLで作って」ではなく「スマホで見られるようにして」。手段を指定すると、もっと良い作り方があっても、そこで止まってしまいます。</p>
+
+<h3>2. ふわっとした基準で言っていい</h3>
+<div class="say">他人が見た時にでも分かるぐらい、分かりやすい教材にして</div>
+<p>これで十分伝わります。「専門用語を使わず、手順を番号で、写真つきで」と細かく言わなくても、この一言が全部を決めます。</p>
+
+<h3>3. 分からないことは、決めさせない</h3>
+<div class="say">分からないことは勝手に決めないで、「要確認」として残して</div>
+<p>これを言っておくと、あいまいな点を<strong>それらしく埋められずに済みます</strong>。後から実機で確かめて埋めればよく、未確定のまま進めても事故になりません。</p>
+
+<h3>4. 「完成」の定義を先に決める</h3>
+<p>作っただけで終わるのか、公開まで含むのかを最初に言います。毎回「公開して」と言わずに済みます。</p>
+<div class="say">これからは、直したら公開して、ちゃんと見られるかの確認までやって</div>
+
+<h3>5. 一度に全部言わなくていい</h3>
+<p>後から足せる形に作ってもらえば、思いついた順に言えます。実際この教材も、作ってから「QRの章を消して」「準備の章を足して」「Gmailの作り方も足して」と後出しで育ちました。</p>
+
+<h3>6. ダメ出しは、具体的に</h3>
+<table>
+  <tr><th>伝わりにくい</th><th>伝わる</th></tr>
+  <tr><td>開けない</td><td>開けない。合言葉を入れると「ちがいます」と赤字が出る。iPhoneのSafariから</td></tr>
+  <tr><td>なんか違う</td><td>文字が小さくて、作業しながらだと読めない</td></tr>
+  <tr><td>使いにくい</td><td>毎回トップに戻るのが面倒。前に見ていた所から開きたい</td></tr>
+</table>
+<div class="box warn">
+  <div class="t">「何が起きたか」を1行足すだけで解決が早い</div>
+  <p>画面に出た文字・使った端末・どこから開いたか。この3つがあると、原因の切り分けがほぼ1回で終わります。実際「開けない」だけでは原因が5通りあり、確認のやり取りが増えました。</p>
+</div>
+
+<h2><span class="n">CHAPTER 05</span>そのまま使える言い回し</h2>
+<table>
+  <tr><th>場面</th><th>言い方</th></tr>
+  <tr><td class="k">作りはじめ</td><td>◯◯をツール化して、常に更新できるようにしたい。可能かな</td></tr>
+  <tr><td class="k">読みやすさ</td><td>他人が見ても分かるぐらい、分かりやすくして</td></tr>
+  <tr><td class="k">事実の扱い</td><td>分からないことは決めないで、要確認として残して</td></tr>
+  <tr><td class="k">項目を足す</td><td>◯◯という項目を、1つの章として足して</td></tr>
+  <tr><td class="k">項目を消す</td><td>◯◯の所はもう使わないから消して</td></tr>
+  <tr><td class="k">写真</td><td>写真は後で渡すから、どの写真が要るか先に教えて</td></tr>
+  <tr><td class="k">スマホで使う</td><td>端末で確認しながら使いたいから、アプリみたいにして</td></tr>
+  <tr><td class="k">見せたくない</td><td>関係ない人には見えないように、簡単な合言葉をかけて</td></tr>
+  <tr><td class="k">公開まで任せる</td><td>これからは直したら公開と確認までやって。毎回言わなくていいように</td></tr>
+  <tr><td class="k">不具合</td><td>◯◯ができない。画面には「◯◯」と出る。端末は◯◯、◯◯から開いた</td></tr>
+  <tr><td class="k">迷ったとき</td><td>どっちがいいか分からない。選択肢を出して</td></tr>
+</table>
+
+<h2><span class="n">CHAPTER 06</span>作ってもらうときに入れたい仕組み</h2>
+<p>この6つを最初に頼んでおくと、<strong>あとで自分が楽になります</strong>。技術的な中身は分からなくて構いません。言葉だけ覚えてください。</p>
+
+<table>
+  <tr><th>頼むこと</th><th>なぜ必要か</th></tr>
+  <tr><td class="k">原本は1か所にして</td><td>同じ事実が2か所にあると、必ず片方が古くなる</td></tr>
+  <tr><td class="k">変わる数字は別にして</td><td>金額・日数・条件を1行直すだけで、全部に反映される</td></tr>
+  <tr><td class="k">未確定が一覧で出るようにして</td><td>何が埋まっていないかが、毎回目に入る</td></tr>
+  <tr><td class="k">スマホで見られるように</td><td>現場で使えないマニュアルは読まれない</td></tr>
+  <tr><td class="k">更新してもURLは同じに</td><td>配った後にリンクが変わると配り直しになる</td></tr>
+  <tr><td class="k">直し方のメモも残して</td><td>間が空いても、どこを触ればいいか自分で分かる</td></tr>
+</table>
+
+<h3>できあがる作業の流れ</h3>
+<ol class="flow">
+  <li><b>原本を直す</b><span>直す場所は1か所だけ。文章か、数字のファイルか</span></li>
+  <li><b>作り直す</b><span>コマンド1つ。配布物が全部まとめて新しくなる</span></li>
+  <li><b>画面で確認する</b><span>スマホの幅で、崩れていないか見る</span></li>
+  <li><b>公開して、公開先でもう一度確認する</b><span>手元で直っていても、公開先が古いままのことがある</span></li>
+</ol>
+
+<h2><span class="n">CHAPTER 07</span>本人しかできないこと</h2>
+<p>ここだけはAIが代われません。<strong>先に済ませておくと、作業が止まりません。</strong></p>
+
+<ul class="ck">
+  <li><b>アカウントの作成とログイン</b><span>GitHub・Googleなど。パスワード入力はAI側が行えません</span></li>
+  <li><b>支払い・課金の操作</b><span>金額が発生するものは必ず本人が確認して実行</span></li>
+  <li><b>公開してよいかの最終判断</b><span>外に出す内容の責任は本人にあります</span></li>
+  <li><b>実機でしか分からない事実の確認</b><span>「カテゴリーは何個選ぶのが正解か」などは、実際に触った人しか知らない</span></li>
+</ul>
+
+<div class="ex"><b>実例</b>
+公開先を用意する段階で、GitHubにログインしていなかったため作業が一度止まりました。ログインを済ませてからは、リポジトリ作成・ファイル配置・公開設定・公開先の動作確認まで、こちらの操作なしで完了しています。<strong>止まるのは毎回「本人しかできない所」です。</strong></div>
+
+<h2><span class="n">CHAPTER 08</span>今回、何を経由して作ったか</h2>
+<p class="lead">新しく買ったものも、新しくインストールしたアプリも<strong>ひとつもありません</strong>。すでに入っているものと、無料のサービスだけで完成しています。</p>
+
+<table>
+  <tr><th>使ったもの</th><th>何に使ったか</th><th>費用</th></tr>
+  <tr><td class="k">Claude（パソコンのアプリ）</td><td>指示を出す相手。文章づくり・ファイルの作成・画面確認・公開作業まで、ほぼ全部ここ</td><td>契約プラン内</td></tr>
+  <tr><td class="k">ChatGPT</td><td>アプリアイコンの絵を1枚つくる</td><td>契約プラン内</td></tr>
+  <tr><td class="k">Google Chrome</td><td>GitHubの操作、画像の受け取り、この指示書のPDF書き出し</td><td>無料</td></tr>
+  <tr><td class="k">GitHub</td><td>公開するファイルの置き場所（アカウント作成が必要）</td><td>無料</td></tr>
+  <tr><td class="k">GitHub Pages</td><td>置いたファイルをURLとして公開する（httpsつき）</td><td>無料</td></tr>
+  <tr><td class="k">Mac に最初から入っている Python</td><td>原本から配布物をまとめて作り直す仕組みを動かす</td><td>無料・導入作業なし</td></tr>
+  <tr><td class="k">スマホのSafari／Chrome</td><td>公開したURLを開いて、ホーム画面に追加する</td><td>無料</td></tr>
+</table>
+
+<h3>どこからどこへ流れているか</h3>
+<ol class="flow">
+  <li><b>パソコンの中で作る</b><span>原本（文章と数字）を直し、配布物を自動で作り直す。ここまでは外に何も出ていない</span></li>
+  <li><b>Chrome経由でGitHubに置く</b><span>できあがった1ファイルを、ブラウザからアップロードする</span></li>
+  <li><b>GitHub PagesがURLとして公開する</b><span>1分ほどで反映。URLは毎回同じなので、配り直しが要らない</span></li>
+  <li><b>スマホのブラウザで開いて、ホーム画面に追加する</b><span>これでアプリのように立ち上がる。合言葉は端末が覚える</span></li>
+</ol>
+
+<div class="box tip">
+  <div class="t">「アプリにする」＝アプリストアに出すことではない</div>
+  <p>今回のアプリは、<strong>ブラウザで開いたページをホーム画面に追加しただけ</strong>です。審査も、ストアへの登録も、年間の費用もかかりません。アイコンから全画面で立ち上がり、見た目も動きもアプリと同じです。<br>
+  AndroidでもiPhoneでも同じURLが使えます。</p>
+</div>
+
+<div class="box warn">
+  <div class="t">ひとつだけ気をつける所</div>
+  <p>公開した直後は、スマホに<strong>古い表示が残っている</strong>ことがあります。開けない・変わっていないと感じたら、一度リロードするか、URLの最後に <span class="mono">?2</span> のような文字を足して開き直してください。実際この一度だけ「開けない」が起きました。</p>
+</div>
+
+<h3>なぜGitHubを使ったのか</h3>
+<p>最初はGitHubを使っていませんでした。<strong>途中で必要になって移した</strong>というのが正確なところです。</p>
+
+<div class="ex"><b>移した理由</b>
+最初はClaudeの機能でそのまま公開し、URLも出ました。ただしそのURLは<strong>claude.aiにログインしている人しか開けません</strong>。自分だけなら使えますが、人に渡せない。そこで「Claude経由じゃない形にしたい」となり、置き場所を探すことになりました。</div>
+
+<p>探すときの条件は、専門的なことではなく、この5つだけでした。</p>
+<table>
+  <tr><th>条件</th><th>なぜ必要だったか</th></tr>
+  <tr><td class="k">無料で、ずっと置ける</td><td>マニュアルは何年も使う。毎月払うほどのものではない</td></tr>
+  <tr><td class="k">URLが変わらない</td><td>配ったあとに変わると、配り直しになる</td></tr>
+  <tr><td class="k">https で開ける</td><td>合言葉の仕組みとホーム画面への追加に必要（下の囲み）</td></tr>
+  <tr><td class="k">ファイルを置くだけで公開できる</td><td>サーバーの設定を覚えたくない</td></tr>
+  <tr><td class="k">広告が入らない</td><td>人に見せる教材に広告が出ると困る</td></tr>
+</table>
+
+<p>この条件で候補を比べた結果です。</p>
+<table>
+  <tr><th>候補</th><th>判断</th></tr>
+  <tr><td class="k">GitHub Pages</td><td><strong>採用。</strong>無料・https付き・URL固定・ファイルを置くだけ・広告なし</td></tr>
+  <tr><td class="k">Netlify / Cloudflare</td><td>条件は満たすが、結局アカウント作成が要る点は同じ。選ぶ決め手がなかった</td></tr>
+  <tr><td class="k">レンタルサーバー</td><td>月額がかかる。この用途には大きすぎる</td></tr>
+  <tr><td class="k">Googleドライブ</td><td>今はホームページとしての公開ができない</td></tr>
+  <tr><td class="k">パソコンの中のファイル</td><td>スマホのホーム画面に入れられない。合言葉の仕組みも動かない</td></tr>
+</table>
+
+<p>もう一つ大きかったのは、<strong>このパソコンに何も入れずに済んだこと</strong>です。本来こういう作業には専用のソフトを入れることが多いのですが、今回は<strong>ブラウザのアップロード画面だけ</strong>で更新できました。入れるソフトが増えないのは、後々きれいです。</p>
+
+<div class="box warn">
+  <div class="t">「ファイルをそのままスマホに入れる」ではダメだった理由</div>
+  <p>合言葉で中身を開く仕組みは、ブラウザに元から入っている暗号の機能を使っています。これは<strong>安全なページ（https）でしか動きません</strong>。パソコンから送ったファイルを直接開く形だと、この機能が働かず、中身を開けません。<br>
+  ホーム画面に追加してアプリのように使う機能も、同じくhttpsが前提です。<strong>どこかに置いてURLにする必要があった</strong>のは、このためです。</p>
+</div>
+
+<div class="box hot">
+  <div class="t">デメリットと、その潰し方</div>
+  <p>GitHubで無料で公開する場合、<strong>置き場所そのものは誰でも見られる状態</strong>になります。そこで、置くファイルの中身（本文・ルール・写真ぜんぶ）を<strong>まるごと暗号化</strong>し、合言葉を入れたときだけ開くようにしました。検索に出ないような指定も入れています。<br>
+  つまり「公開の場所に置くけれど、中身は読めない」という形です。<strong>弱点が分かっているなら、先に潰せば使える</strong>という判断でした。</p>
+</div>
+
+<div class="ex"><b>内訳</b>
+Pythonの中では、文章の組み立て（Jinja2・markdown-it-py）、写真の圧縮（Pillow）、中身の暗号化（cryptography）、QRコードの作成（qrcode）、PDFの確認（PyMuPDF）といった無料の部品を使っています。<strong>どれも事前の導入作業は不要でした。</strong>名前を覚える必要はありませんが、同じものを作り直すときの手がかりになります。</div>
+
+<h2><span class="n">CHAPTER 09</span>まるごとコピペできる依頼文</h2>
+<p>最初の一通はこれで足ります。色のついた<span class="fill">　◯◯　</span>の部分だけ、自分の言葉に置き換えてください。</p>
+
+<div class="tpl">
+  <div class="lbl">COPY &amp; PASTE</div>
+  <p><span class="fill">　◯◯　</span>をツール化して、常にアップデートできるようにしたい。</p>
+  <p>今ある資料は<span class="fill">　◯◯　</span>に入っていて、バラバラのまま整理できていない。古い情報も混ざっていると思う。</p>
+  <p>使うのは<span class="fill">　自分と◯◯　</span>で、<span class="fill">　作業中にスマホ　</span>で見たい。他人が見ても分かるぐらい分かりやすくしてほしい。</p>
+  <p>作るときは、原本を1か所にまとめて、そこから全部が自動で作り直される形にして。金額や日数みたいに変わる数字は、1か所直せば全部に反映されるようにしてほしい。</p>
+  <p>分からないことは勝手に決めないで「要確認」として残して、何が未確定か一覧で分かるようにして。</p>
+  <p>写真は後から渡すから、どんな写真が必要かを先に教えて。</p>
+  <p>進め方で迷ったら、勝手に決めずに選択肢を出して。</p>
+</div>
+
+<div class="box tip">
+  <div class="t">2通目以降は、思いついた順でいい</div>
+  <p>「◯◯の章を足して」「◯◯は消して」「合言葉を◯◯に変えて」。1行で足ります。最初に「公開と確認まで含めて」と言ってあれば、毎回お願いする必要はありません。</p>
+</div>
+
+<h2><span class="n">CHAPTER 10</span>実際にかかった時間</h2>
+<p>参考までに、TikTok Liteマニュアルがどう育ったかの記録です。<strong>1日で完成させていません。使いながら足していった結果です。</strong></p>
+
+<table>
+  <tr><th>日</th><th>やったこと</th></tr>
+  <tr><td class="k">1日目</td><td>散らかった資料を渡す → 原本の集約、配布物の自動生成、矛盾3件の洗い出し</td></tr>
+  <tr><td class="k">1日目</td><td>「QRの章は消して」「準備と条件の章を足して」</td></tr>
+  <tr><td class="k">2日目</td><td>「端末で確認したいからアプリにして」「アイコンも作って」 → スマホアプリ化・公開</td></tr>
+  <tr><td class="k">2日目</td><td>「ログイン不要にして」「合言葉をかけて」 → 公開先を移して合言葉つきに</td></tr>
+  <tr><td class="k">3日目</td><td>合言葉の変更、表示の調整</td></tr>
+  <tr><td class="k">6日目</td><td>「Gmailの作り方も1つの章として足して」 → 章を追加して公開まで反映</td></tr>
+</table>
+
+<div class="box hot">
+  <div class="t">最後に</div>
+  <p>完璧な指示を考えてから始める必要はありません。<strong>「◯◯をツール化したい、可能かな」で始めて、出てきたものを見てから直すほうが早い</strong>です。この手引きも、そのやり方で作られています。</p>
+</div>
+
+<div class="foot">AIにツールを作らせるときの指示書／2026年10月14日　作成　—　TikTokマニュアル プロジェクトでの実例をもとに</div>
+
+</body></html>
